@@ -7,15 +7,20 @@ const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 
 const apiResponse = require("./utils/apiResponse");
+
 const authRouter = require("./modules/auth/auth.route");
+const userRouter = require("./modules/users/user.route");
 
 const app = express();
 
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Security
 app.use(helmet());
 
+// CORS
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "*",
@@ -23,10 +28,16 @@ app.use(
   })
 );
 
+// Cookies
 app.use(cookieParser());
+
+// Compression
 app.use(compression());
+
+// Logger
 app.use(morgan("dev"));
 
+// Rate limiter
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -34,10 +45,7 @@ app.use(
   })
 );
 
-// Auth routes
-app.use("/api/v1/auth", authRouter);
-
-// Health route
+// Health check
 app.get("/api/v1/health", (_req, res) => {
   res.status(200).json(
     apiResponse(
@@ -52,5 +60,11 @@ app.get("/api/v1/health", (_req, res) => {
     )
   );
 });
+
+// 7.1 Authentication APIs
+app.use("/api/v1/auth", authRouter);
+
+// 7.2 Users & Addresses APIs
+app.use("/api/v1/users", userRouter);
 
 module.exports = app;
